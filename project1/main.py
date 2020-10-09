@@ -20,18 +20,26 @@ class MinErrorRate:
         self.k = x_data.shape[1]
         self.c = len(set(y_data))
 
-        self.train()
+        self.train(1)
 
-    def train(self):
+    def train(self, i):
+        """
+        Computes the weights for the discriminant function for class i
+
+        :param i: class for which to parametrize
+        :return: weights for the discriminant function of class i
+        """
         mu = self.estimate_mu()
         cov = self.estimate_sigma()
-        # inv_sigma = np.linalg.inv(cov)
-        # P = self.estimate_P()
-        # print(P)
-        # i=0
-        # Wi = -1/2 * inv_sigma
-        # wi = inv_sigma @ mu
-
+        inv_sigmas = np.array([np.linalg.inv(cov[:,:,i]) for i in range(self.c)])
+        P = self.estimate_P()
+        Wi = -1/2 * inv_sigmas[:,:,i]
+        print(mu.shape)
+        inv_s_i = inv_sigmas[1,:,:]
+        print(inv_s_i.shape)
+        wi = inv_s_i @ np.atleast_2d(mu).T
+        wi0 = -1/2 * np.atleast_2d(mu) @ inv_s_i @ np.atleast_2d(mu).T - 1/2 * np.abs(cov[i,:,:])+np.log(P)
+        return [Wi, wi, wi0]
 
     def estimate_P(self):
         P = np.zeros(len(set(self.y_data)))
@@ -50,12 +58,15 @@ class MinErrorRate:
             for k in range(self.n):
                 sigma_i+=np.atleast_2d(self.x_data[i]-mu).T@np.atleast_2d(self.x_data[i]-mu)
             sigma[:,:,i]=sigma_i
-            print(sigma_i)
-        return sigma
+        return sigma/self.n
 
 
     def predict(self, x):
-        pass
+        weights = []
+        for classes in range(len(set(self.y_data))):
+            weights.append(self.train(classes))
+
+
 
 
 
@@ -82,10 +93,10 @@ if __name__ == "__main__":
     y_train = y[1:][::2]
     x_test = x[::2]
     y_test = y[::2]
-    plt.scatter(x[:, 0], x[:, 1], c=y)
-    plt.show()
-    plt.scatter(x[:, 1], x[:, 2], c=y)
-    plt.show()
+    # plt.scatter(x[:, 0], x[:, 1], c=y)
+    # plt.show()
+    # plt.scatter(x[:, 1], x[:, 2], c=y)
+    # plt.show()
     nn_model = NearestNeighbour(x,y)
     me_model = MinErrorRate(x,y)
 
