@@ -15,7 +15,7 @@ class NearestNeighbour:
 class MinErrorRate:
     def __init__(self, x_data, y_data):
         self.x_data = x_data
-        self.y_data = y_data
+        self.y_data = y_data-1
         self.n = x_data.shape[0]
         self.k = x_data.shape[1]
         self.c = len(set(y_data))
@@ -29,28 +29,26 @@ class MinErrorRate:
         :param i: class for which to parametrize
         :return: weights for the discriminant function of class i
         """
-        mu = self.estimate_mu()
-        cov = self.estimate_sigma()
-        inv_sigmas = np.array([np.linalg.inv(cov[:,:,i]) for i in range(self.c)])
-        P = self.estimate_P()
-        Wi = -1/2 * inv_sigmas[:,:,i]
-        print(mu.shape)
-        inv_s_i = inv_sigmas[1,:,:]
-        print(inv_s_i.shape)
-        wi = inv_s_i @ np.atleast_2d(mu).T
-        wi0 = -1/2 * np.atleast_2d(mu) @ inv_s_i @ np.atleast_2d(mu).T - 1/2 * np.abs(cov[i,:,:])+np.log(P)
+        mu_i = np.atleast_2d(self.estimate_mu(i)).T
+        cov_i = self.estimate_sigma(i)
+        inv_sigma_i =np.linalg.inv(cov_i)
+        P_i = self.estimate_P(i)
+        Wi = -1/2 * inv_sigma_i
+        wi = inv_sigma_i @ mu_i
+        wi0 = -1/2 * mu_i.T @ inv_sigma_i @ mu_i - 1/2 * np.linalg.norm(cov_i)+np.log(P_i)
         return [Wi, wi, wi0]
 
-    def estimate_P(self):
+    def estimate_P(self, i):
         P = np.zeros(len(set(self.y_data)))
         for c in range(len(set(self.y_data))):
             P[c] = np.sum((y_train == c+1))/len(y_train)
-        return P
+        return P[i]
 
-    def estimate_mu(self):
-        return np.mean(self.x_data, axis=0)
+    def estimate_mu(self, i):
+        return np.mean(self.x_data[self.y_data == i], axis=0)
 
-    def estimate_sigma(self):
+
+    def estimate_sigma(self, i):
         sigma = np.zeros((self.k, self.k, self.c))
         for i in range(self.c):
             mu = np.mean(self.x_data, axis=0)
@@ -58,16 +56,16 @@ class MinErrorRate:
             for k in range(self.n):
                 sigma_i+=np.atleast_2d(self.x_data[i]-mu).T@np.atleast_2d(self.x_data[i]-mu)
             sigma[:,:,i]=sigma_i
-        return sigma/self.n
+        return sigma[:,:,i]/self.n
 
 
     def predict(self, x):
-        weights = []
-        for classes in range(len(set(self.y_data))):
-            weights.append(self.train(classes))
-
-
-
+        ys = []
+        x = np.atleast_2d(x).T
+        for i in range(len(set(self.y_data))):
+            weights = self.train(i)
+            ys.append(float(x.T@weights[0]@x+weights[1].T@x+weights[2]))
+        return np.argmax(np.array(ys))
 
 
 
@@ -104,5 +102,10 @@ if __name__ == "__main__":
     for i in range(len(x_train)):
         assert nn_model.predict(x_train[i]) == y_train[i], "Nearest Neigbour Classifier not predicting correctly"
     #MinErrorRate
+    c=0
+    for i in range(len(x_train)):
+        if me_model.predict(x_train[i])==y_train[i]-1:
+            c+=1
+    print(c/len(x_train))
 
     print("Tests complete")
