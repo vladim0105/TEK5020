@@ -49,14 +49,12 @@ class MinErrorRate:
 
 
     def estimate_sigma(self, i):
-        sigma = np.zeros((self.k, self.k, self.c))
-        for i in range(self.c):
-            mu = np.mean(self.x_data, axis=0)
-            sigma_i = np.zeros((self.k, self.k))
-            for k in range(self.n):
-                sigma_i+=np.atleast_2d(self.x_data[i]-mu).T@np.atleast_2d(self.x_data[i]-mu)
-            sigma[:,:,i]=sigma_i
-        return sigma[:,:,i]/self.n
+        mu_i = self.estimate_mu(i)
+        sigma_i = np.zeros((self.k, self.k))
+        x = self.x_data[self.y_data==i]
+        for k in range(self.n):
+            sigma_i+=np.atleast_2d(x[i]-mu_i).T@np.atleast_2d(x[i]-mu_i)
+        return sigma_i/len(x)
 
 
     def predict(self, x):
