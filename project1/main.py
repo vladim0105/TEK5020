@@ -73,7 +73,10 @@ class LeastSquares:
         self.y_data = y_data
 
     def predict(self, x):
-        pass
+        extra = 0
+        dim = len(set(self.y_data))+extra
+        a = np.zeros((1, dim))
+
 
 
 if __name__ == "__main__":
@@ -85,25 +88,29 @@ if __name__ == "__main__":
     print("Plotting Data")
     x = data.iloc[:, 1:].to_numpy()
     y = data.iloc[:, 0].to_numpy()
-    x_train = x[1:][::2]
-    y_train = y[1:][::2]
+    x_train = x[1::2]
+    y_train = y[1::2]
     x_test = x[::2]
     y_test = y[::2]
     # plt.scatter(x[:, 0], x[:, 1], c=y)
     # plt.show()
     # plt.scatter(x[:, 1], x[:, 2], c=y)
     # plt.show()
-    nn_model = NearestNeighbour(x,y)
-    me_model = MinErrorRate(x,y)
+    nn_model = NearestNeighbour(x_train,y_train)
+    me_model = MinErrorRate(x_train,y_train)
 
     print("Testing classifiers...")
     for i in range(len(x_train)):
         assert nn_model.predict(x_train[i]) == y_train[i], "Nearest Neigbour Classifier not predicting correctly"
     #MinErrorRate
+
+    print("Evaluating classifiers...")
     c=0
-    for i in range(len(x_train)):
-        if me_model.predict(x_train[i])==y_train[i]-1:
+    for i in range(len(x_test)):
+        if me_model.predict(x_test[i])==y_test[i]-1:
             c+=1
-    print(c/len(x_train))
+    print("Minimum Error Rate classifier Accuracy: ", c/len(x_train))
+
+
 
     print("Tests complete")
