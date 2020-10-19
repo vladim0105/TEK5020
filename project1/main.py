@@ -82,8 +82,8 @@ class LeastSquares:
         x = np.insert(x, 0, 1)
 
         result = self.a.T @ x
-
-        return np.where(result > 0, 1, -1)
+        # Convert back to classes
+        return np.where(result >= 0, 1, 2)
 
 
 
