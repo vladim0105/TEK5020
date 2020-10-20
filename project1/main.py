@@ -29,11 +29,10 @@ class MinErrorRate:
         """
 
         for i in range(self.c):
-            mu_i = np.atleast_2d(self.estimate_mu(i)).T
-            cov_i = self.estimate_sigma(i)
+            mu_i = self.estimate_mu(i).T
+            cov_i = self.estimate_sigma(i, mu_i)
             inv_sigma_i = np.linalg.inv(cov_i)
             P_i = self.estimate_P(i)
-            print(P_i)
             Wi = -1 / 2 * inv_sigma_i
             wi = inv_sigma_i @ mu_i
             wi0 = -1 / 2 * mu_i.T @ inv_sigma_i @ mu_i - 1 / 2 * np.log(np.linalg.det(cov_i)) + np.log(P_i)
@@ -46,14 +45,12 @@ class MinErrorRate:
     def estimate_mu(self, i):
         return np.atleast_2d(np.mean(self.x_data[self.y_data == i], axis=0))
 
-    def estimate_sigma(self, i):
-        mu_i = self.estimate_mu(i)
+    def estimate_sigma(self, i, mu_i):
         sigma_i = np.zeros((self.k, self.k))
         x = np.atleast_2d(self.x_data[self.y_data == i])
-        print(x.shape)
         for xi in x:
             sigma_i += (xi - mu_i).T @ (xi - mu_i)
-        return sigma_i / self.n
+        return sigma_i / len(x)
 
     def predict(self, x):
         ys = []
