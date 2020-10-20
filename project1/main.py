@@ -20,47 +20,46 @@ class MinErrorRate:
         self.n = x_data.shape[0]
         self.k = x_data.shape[1]
         self.c = len(set(y_data))
-
-        self.train(1)
-
-    def train(self, i):
+        self.weights = []
+    def train(self):
         """
         Computes the weights for the discriminant function for class i
 
-        :param i: class for which to parametrize
         :return: weights for the discriminant function of class i
         """
-        mu_i = np.atleast_2d(self.estimate_mu(i)).T
-        cov_i = self.estimate_sigma(i)
-        inv_sigma_i = np.linalg.inv(cov_i)
-        P_i = self.estimate_P(i)
-        Wi = -1 / 2 * inv_sigma_i
-        wi = inv_sigma_i @ mu_i
-        wi0 = -1 / 2 * mu_i.T @ inv_sigma_i @ mu_i - 1 / 2 * np.linalg.norm(cov_i) + np.log(P_i)
-        return [Wi, wi, wi0]
+
+        for i in range(self.c):
+            mu_i = np.atleast_2d(self.estimate_mu(i)).T
+            cov_i = self.estimate_sigma(i)
+            inv_sigma_i = np.linalg.inv(cov_i)
+            P_i = self.estimate_P(i)
+            print(P_i)
+            Wi = -1 / 2 * inv_sigma_i
+            wi = inv_sigma_i @ mu_i
+            wi0 = -1 / 2 * mu_i.T @ inv_sigma_i @ mu_i - 1 / 2 * np.log(np.linalg.det(cov_i)) + np.log(P_i)
+            self.weights.append([Wi, wi, wi0])
+        return self.weights
 
     def estimate_P(self, i):
-        P = np.zeros(len(set(self.y_data)))
-        for c in range(len(set(self.y_data))):
-            P[c] = np.sum((y_train == c + 1)) / len(y_train)
-        return P[i]
+        return np.sum((y_train == i+1)) / len(y_train)
 
     def estimate_mu(self, i):
-        return np.mean(self.x_data[self.y_data == i], axis=0)
+        return np.atleast_2d(np.mean(self.x_data[self.y_data == i], axis=0))
 
     def estimate_sigma(self, i):
         mu_i = self.estimate_mu(i)
         sigma_i = np.zeros((self.k, self.k))
-        x = self.x_data[self.y_data == i]
-        for k in range(self.n):
-            sigma_i += np.atleast_2d(x[i] - mu_i).T @ np.atleast_2d(x[i] - mu_i)
-        return sigma_i / len(x)
+        x = np.atleast_2d(self.x_data[self.y_data == i])
+        print(x.shape)
+        for xi in x:
+            sigma_i += (xi - mu_i).T @ (xi - mu_i)
+        return sigma_i / self.n
 
     def predict(self, x):
         ys = []
         x = np.atleast_2d(x).T
         for i in range(len(set(self.y_data))):
-            weights = self.train(i)
+            weights = self.weights[i]
             ys.append(float(x.T @ weights[0] @ x + weights[1].T @ x + weights[2]))
         return np.argmax(np.array(ys))
 
@@ -104,9 +103,10 @@ if __name__ == "__main__":
     # plt.show()
     # plt.scatter(x[:, 1], x[:, 2], c=y)
     # plt.show()
-    nn_model = NearestNeighbour(x_test, y_test)
-    me_model = MinErrorRate(x_test, y_test)
-    ls_model = LeastSquares(x_test, y_test)
+    nn_model = NearestNeighbour(x_train, y_train)
+    me_model = MinErrorRate(x_train, y_train)
+    me_model.train()
+    ls_model = LeastSquares(x_train, y_train)
 
     print("Testing classifiers...")
 
