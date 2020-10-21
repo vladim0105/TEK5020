@@ -21,11 +21,13 @@ class MinErrorRate:
         self.k = x_data.shape[1]
         self.c = len(set(y_data))
         self.weights = []
+
+
     def train(self):
         """
         Computes the weights for the discriminant function for class i
 
-        :return: weights for the discriminant function of class i
+        :return: weights for the discriminant function for each class
         """
 
         for i in range(self.c):
@@ -40,7 +42,7 @@ class MinErrorRate:
         return self.weights
 
     def estimate_P(self, i):
-        return np.sum((y_train == i+1)) / len(y_train)
+        return np.sum((self.y_data == i)) / len(self.y_data)
 
     def estimate_mu(self, i):
         return np.atleast_2d(np.mean(self.x_data[self.y_data == i], axis=0))
