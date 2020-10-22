@@ -50,8 +50,10 @@ class MinErrorRate:
     def estimate_sigma(self, i, mu_i):
         sigma_i = np.zeros((self.k, self.k))
         x = np.atleast_2d(self.x_data[self.y_data == i])
+        sigma_i = np.mean(np.array([ (xi - mu_i).T @ (xi - mu_i) for xi in x]), axis=0)
         for xi in x:
-            sigma_i += (xi - mu_i).T @ (xi - mu_i)
+            xi = np.atleast_2d(xi).T
+            sigma_i += (xi - mu_i) @ (xi - mu_i).T
         return sigma_i / len(x)
 
     def predict(self, x):
@@ -86,18 +88,18 @@ class LeastSquares:
 
 
 if __name__ == "__main__":
-    data = pd.read_csv('data/ds-1.txt', sep="  ", header=None)
-    data.columns = ["class", "feature_1", "feature_2", "feature_3", "feature_4"]
+    data = pd.read_csv('data/ds-2.txt', delim_whitespace=True, header=None)
+    data.columns = ["class", "feature_1", "feature_2", "feature_3"]
     print("Samples: ", len(data))
     print("Data Head:")
     print(data.head(5))
     print("Plotting Data")
     x = data.iloc[:, 1:].to_numpy()
     y = data.iloc[:, 0].to_numpy()
-    x_train = x[1::2]
-    y_train = y[1::2]
-    x_test = x[::2]
-    y_test = y[::2]
+    x_train = x[::2]
+    y_train = y[::2]
+    x_test = x[1::2]
+    y_test = y[1::2]
     # plt.scatter(x[:, 0], x[:, 1], c=y)
     # plt.show()
     # plt.scatter(x[:, 1], x[:, 2], c=y)
