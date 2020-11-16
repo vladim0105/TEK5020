@@ -50,7 +50,6 @@ class MinErrorRate:
     def estimate_sigma(self, i, mu_i):
         sigma_i = np.zeros((self.k, self.k))
         x = np.atleast_2d(self.x_data[self.y_data == i])
-        sigma_i = np.mean(np.array([ (xi - mu_i).T @ (xi - mu_i) for xi in x]), axis=0)
         for xi in x:
             xi = np.atleast_2d(xi).T
             sigma_i += (xi - mu_i) @ (xi - mu_i).T
